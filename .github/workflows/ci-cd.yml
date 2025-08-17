@@ -56,7 +56,7 @@ jobs:
 
     - name: Clone Helm repository
       run: |
-        git clone https://github.com/yagen1111/helm-web-db.git helm-repo
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yagen1111/helm-web-db.git helm-repo
         cd helm-repo
 
     - name: Update Helm values with new image tags
