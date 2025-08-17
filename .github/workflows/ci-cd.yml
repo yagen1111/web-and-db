@@ -2,57 +2,90 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - 'app-web/**'
+      - 'db-web/**'
+      - '.github/workflows/ci-cd.yml'
+
+env:
+  DOCKER_REGISTRY: docker.io
+  WEB_IMAGE: yagen1111/web_and_db-web
+  DB_IMAGE: yagen1111/web_and_db-db
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ vars.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: docker build
-      #   uses: docker/setup-buildx-action@v3
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: .
-      #     push: true
-      #     tags: |
-      #         ghcr.io/${{ github.repository }}:latest
-      #         ghcr.io/${{ github.repository }}:${{ github.sha }}
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+    - name: Generate unique tag
+      id: tag
+      run: |
+        echo "tag=${{ github.sha::7 }}" >> $GITHUB_OUTPUT
 
-      # - name: Update image tag in Helm chart
-      #   shell: bash
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITOPS_PAT }}
-      #   run: |
-      #     # Configure git credential store
-      #     git config --global credential.helper store
-      #     echo "https://${GIT_TOKEN}:x-oauth-basic@github.com" > ~/.git-credentials
-          
-      #     # Remove any existing gitops directory
-      #     rm -rf gitops
-          
-      #     # Clone repository using HTTPS URL without token
-      #     git clone https://github.com/yagen1111/helm-web-db.git gitops
-      #     cd gitops
+    - name: Build and push web app image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./app-web
+        push: true
+        tags: |
+          ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}
+          ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:latest
 
-      #     sed -i "s|image: ghcr.io/${{ github.repository }}:.*|image: ghcr.io/${{ github.repository }}:${{ github.sha }}|g" values.yaml
-  
-      #     git config --global user.name "GitHub Actions"
-      #     git config --global user.email "actions@github.com"
-      #     git add values.yaml
-      #     git commit -m "Update image to ${{ github.sha }}"
-          
-      #     # Push
-      #     git push -f https://${GIT_TOKEN}@github.com/yagen1111/helm-web-db.git main
+    - name: Build and push db image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./db-web
+        push: true
+        tags: |
+          ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}
+          ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:latest
+
+    - name: Clone Helm repository
+      run: |
+        git clone https://github.com/yagen1111/helm-web-db.git helm-repo
+        cd helm-repo
+
+    - name: Update Helm values with new image tags
+      run: |
+        cd helm-repo
+        # Update the web image tag (yagen1111/web_and_db-web)
+        sed -i "s|repository: yagen1111/web_and_db-web.*tag: \".*\"|repository: yagen1111/web_and_db-web\n    tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
+        
+        # Update the db image tag (yagen1111/web_and_db-db)
+        sed -i "s|repository: yagen1111/web_and_db-db.*tag: \".*\"|repository: yagen1111/web_and_db-db\n    tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
+        
+        # Display the updated values
+        echo "Updated values.yaml:"
+        cat values.yaml
+
+    - name: Commit and push changes to Helm repository
+      run: |
+        cd helm-repo
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add values.yaml
+        git commit -m "Update image tags"
+        git push origin main
+
+    - name: Output image information
+      run: |
+        echo "Build completed successfully!"
+        echo "Web App Image: ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}"
+        echo "DB Image: ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}"
+        echo "Tag: ${{ steps.tag.outputs.tag }}"
+        echo "ArgoCD will automatically detect the changes and deploy the new images"
