@@ -62,15 +62,19 @@ jobs:
     - name: Update Helm values with new image tags
       run: |
         cd helm-repo
-        # Update the web image tag (yagen1111/web_and_db-web)
-        sed -i "s|repository: yagen1111/web_and_db-web.*tag: \".*\"|repository: yagen1111/web_and_db-web\n    tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
-        
-        # Update the db image tag (yagen1111/web_and_db-db)
-        sed -i "s|repository: yagen1111/web_and_db-db.*tag: \".*\"|repository: yagen1111/web_and_db-db\n    tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
-        
-        # Display the updated values
-        echo "Updated values.yaml:"
+        echo "Current values.yaml content:"
         cat values.yaml
+        
+        echo "Updating image tags..."
+        
+        # Update the web image tag - simpler approach
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
+        
+        echo "Updated values.yaml content:"
+        cat values.yaml
+        
+        echo "Git status:"
+        git status
 
     - name: Commit and push changes to Helm repository
       run: |
