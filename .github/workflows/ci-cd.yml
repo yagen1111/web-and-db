@@ -56,7 +56,7 @@ jobs:
 
     - name: Clone Helm repository
       run: |
-        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/yagen1111/helm-web-db.git helm-repo
+        git clone https://x-access-token:${{ secrets.HELM_REPO_TOKEN }}@github.com/yagen1111/helm-web-db.git helm-repo
         cd helm-repo
 
     - name: Update Helm values with new image tags
@@ -83,7 +83,7 @@ jobs:
         git config --local user.name "GitHub Action"
         git add values.yaml
         git commit -m "Update image tags"
-        git push origin main
+        git push https://x-access-token:${{ secrets.HELM_REPO_TOKEN }}@github.com/yagen1111/helm-web-db.git main
 
     - name: Output image information
       run: |
