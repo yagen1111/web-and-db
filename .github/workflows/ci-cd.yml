@@ -34,7 +34,7 @@ jobs:
     - name: Generate unique tag
       id: tag
       run: |
-        echo "tag=${ github.sha }" >> $GITHUB_OUTPUT
+        echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
 
     - name: Build and push web app image
       uses: docker/build-push-action@v5
