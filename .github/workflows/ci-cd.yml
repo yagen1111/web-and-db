@@ -91,7 +91,7 @@ jobs:
     - name: Output image information
       run: |
         echo "build completed successfully!"
-        echo "📦 Web App Image: ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}"
+        echo "Web App Image: ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}"
         echo "📦 DB Image: ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}"
         echo "🏷️  Tag: ${{ steps.tag.outputs.tag }}"
         echo "📝 Note: Helm values.yaml update is disabled for now"
