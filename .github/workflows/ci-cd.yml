@@ -3,8 +3,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - 'web-and-db/app-web/**'
-      - 'web-and-db/db-web/**'
+      - 'app-web/**'
+      - 'db-web/**'
       - '.github/workflows/ci-cd.yml'
 
 env:
@@ -39,7 +39,7 @@ jobs:
     - name: Build and push web app image
       uses: docker/build-push-action@v5
       with:
-        context: ./web-and-db/app-web
+        context: ./app-web
         push: true
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}
@@ -48,7 +48,7 @@ jobs:
     - name: Build and push db image
       uses: docker/build-push-action@v5
       with:
-        context: ./web-and-db/db-web
+        context: ./db-web
         push: true
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}
