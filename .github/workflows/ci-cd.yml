@@ -34,6 +34,17 @@ jobs:
       run: |
         echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies and run tests
+      run: |
+        cd web-and-db/app-web
+        pip install -r requirements.txt
+        python -m pytest test_app.py -v
+
     - name: Build and push web app image
       uses: docker/build-push-action@v5
       with:
