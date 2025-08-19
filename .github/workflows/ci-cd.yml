@@ -33,11 +33,6 @@ jobs:
       id: tag
       run: |
         echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
-    - name: Show repo tree
-      run: |
-        pwd
-        ls -la
-        ls -R
 
     - name: Build and push web app image
       uses: docker/build-push-action@v5
@@ -66,16 +61,22 @@ jobs:
       run: |
         cd helm-repo
         echo "Current values.yaml content:"
-        cat values.yaml
+        cat values-dev.yaml
+        cat values-prod.yaml
+        cat values-staging.yaml
         
         echo "Updating image tags..."
         
         # Update the web image tag - simpler approach
-        sed -i "s|tag: \".*\"|tag: \"${{ steps.tag.outputs.tag }}\"|g" values.yaml
-        
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.tag.outputs.tag }}\"|g" values-prod.yaml
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.tag.outputs.tag }}\"|g" values-staging.yaml
+        sed -i "s|tag: \".*\"|tag: \"${{ steps.tag.outputs.tag }}\"|g" values-dev.yaml
+
         echo "Updated values.yaml content:"
-        cat values.yaml
-        
+        cat values-dev.yaml
+        cat values-prod.yaml
+        cat values-staging.yaml
+
         echo "Git status:"
         git status
 
@@ -84,7 +85,7 @@ jobs:
         cd helm-repo
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add values.yaml
+        git add .
         git commit -m "Update image tags"
         git push https://x-access-token:${{ secrets.HELM_REPO_TOKEN }}@github.com/yagen1111/helm-web-db.git main
 
@@ -92,7 +93,5 @@ jobs:
       run: |
         echo "build completed successfully!"
         echo "Web App Image: ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}"
-        echo "📦 DB Image: ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}"
-        echo "🏷️  Tag: ${{ steps.tag.outputs.tag }}"
-        echo "📝 Note: Helm values.yaml update is disabled for now"
-        echo "🔧 To deploy: manually update your Helm values.yaml with the new image tags above"
+        echo "DB Image: ${{ env.DOCKER_REGISTRY }}/${{ env.DB_IMAGE }}:${{ steps.tag.outputs.tag }}"
+        echo "Tag: ${{ steps.tag.outputs.tag }}"
