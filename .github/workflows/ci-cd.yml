@@ -43,7 +43,7 @@ jobs:
     - name: Build and push web app image
       uses: docker/build-push-action@v5
       with:
-        context: ./app-web
+        context: context: ./web-and-db/web-and-db/app-web
         push: true
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}
