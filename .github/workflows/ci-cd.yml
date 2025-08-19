@@ -35,6 +35,9 @@ jobs:
       id: tag
       run: |
         echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+    - name: Show repo tree
+      run: ls -R
+
 
     - name: Build and push web app image
       uses: docker/build-push-action@v5
