@@ -37,7 +37,7 @@ jobs:
         echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
     - name: Show repo tree
       run: |
-          cd ..
+          cd ../..
           ls -R
 
     - name: Build and push web app image
