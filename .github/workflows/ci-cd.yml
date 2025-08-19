@@ -18,9 +18,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+      uses: actions/checkout@v5
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -43,7 +41,7 @@ jobs:
     - name: Build and push web app image
       uses: docker/build-push-action@v5
       with:
-        context: context: ./web-and-db/web-and-db/app-web
+        context: context: ./app-web
         push: true
         tags: |
           ${{ env.DOCKER_REGISTRY }}/${{ env.WEB_IMAGE }}:${{ steps.tag.outputs.tag }}
